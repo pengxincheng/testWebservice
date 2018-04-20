@@ -68,38 +68,34 @@ public class FoHibernateDaoSupport extends HibernateDaoSupport {
     }
 
     private FoPage execFoPageHQLQuery(final FoHQLQuery foQuery) {
-        return (FoPage) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                FoPage foPage = new FoPage();
-                int nPageSize = foQuery.getPageSize();
-                if (nPageSize <= 0)
-                    nPageSize = 10;
-                int nPageNum = foQuery.getPageNum();
-                if (nPageNum <= 0)
-                    nPageNum = 1;
-                foPage.setPageSize(nPageSize);
-                foPage.setPageNum(nPageNum);
-                int totalCount = 0;
-                if (foQuery.getCountHQL() != null && !foQuery.getCountHQL().equals("")) {
-                    totalCount = ((Number) foQuery.fillQueryStmt(
-                            session.createQuery(foQuery.getCountHQL()), true)
-                            .uniqueResult()).intValue();
-                    foPage.setTotalRecordCount(totalCount);
-                } else {
-                   // throw new HibernateException("没有找到统计总数的HQL");
-                }
+        return (FoPage) getHibernateTemplate().execute((HibernateCallback<Object>) session -> {
+            FoPage foPage = new FoPage();
+            int nPageSize = foQuery.getPageSize();
+            if (nPageSize <= 0)
+                nPageSize = 10;
+            int nPageNum = foQuery.getPageNum();
+            if (nPageNum <= 0)
+                nPageNum = 1;
+            foPage.setPageSize(nPageSize);
+            foPage.setPageNum(nPageNum);
+            int totalCount = 0;
+            if (foQuery.getCountHQL() != null && !foQuery.getCountHQL().equals("")) {
+                totalCount = ((Number) foQuery.fillQueryStmt(
+                        session.createQuery(foQuery.getCountHQL()), true)
+                        .uniqueResult()).intValue();
+                foPage.setTotalRecordCount(totalCount);
+            } else {
+               // throw new HibernateException("没有找到统计总数的HQL");
+            }
 //                if ((nPageNum - 1) * nPageSize >= totalCount) {
 //                    foPage.setPageNum(foPage.getPageCount());
 //                    nPageNum = foPage.getPageNum();
 //                }
-                foPage.setDataList(foQuery
-                        .fillQueryStmt(session.createQuery(foQuery.getHQL()), false)
-                        .setFirstResult((nPageNum - 1) * nPageSize)
-                        .setMaxResults(nPageSize).list());
-                return foPage;
-            }
+            foPage.setDataList(foQuery
+                    .fillQueryStmt(session.createQuery(foQuery.getHQL()), false)
+                    .setFirstResult((nPageNum - 1) * nPageSize)
+                    .setMaxResults(nPageSize).list());
+            return foPage;
         });
     }
 
@@ -127,42 +123,38 @@ public class FoHibernateDaoSupport extends HibernateDaoSupport {
     }
 
     private FoPage execFoPageSQLQuery(final FoSQLQuery foQuery) {
-        return (FoPage) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                FoPage foPage = new FoPage();
-                int nPageSize = foQuery.getPageSize();
-                if (nPageSize <= 0)
-                    nPageSize = 10;
-                int nPageNum = foQuery.getPageNum();
-                if (nPageNum <= 0)
-                    nPageNum = 1;
-                foPage.setPageSize(nPageSize);
-                foPage.setPageNum(nPageNum);
-                int totalCount = 0;
-                SQLQuery query;
-                if (foQuery.getCountSQL() != null) {
-                    query = session.createSQLQuery(foQuery.getCountSQL());
-                    query.addScalar("COUNT", IntegerType.INSTANCE);
-                    foQuery.fillQueryStmt(query, true);
-                    totalCount = ((Number) query.uniqueResult()).intValue();
-                    foPage.setTotalRecordCount(totalCount);
-                } else {
-                    throw new HibernateException("没有找到统计总数的SQL");
-                }
+        return (FoPage) getHibernateTemplate().execute((HibernateCallback<Object>) session -> {
+            FoPage foPage = new FoPage();
+            int nPageSize = foQuery.getPageSize();
+            if (nPageSize <= 0)
+                nPageSize = 10;
+            int nPageNum = foQuery.getPageNum();
+            if (nPageNum <= 0)
+                nPageNum = 1;
+            foPage.setPageSize(nPageSize);
+            foPage.setPageNum(nPageNum);
+            int totalCount = 0;
+            SQLQuery query;
+            if (foQuery.getCountSQL() != null) {
+                query = session.createSQLQuery(foQuery.getCountSQL());
+                query.addScalar("COUNT", IntegerType.INSTANCE);
+                foQuery.fillQueryStmt(query, true);
+                totalCount = ((Number) query.uniqueResult()).intValue();
+                foPage.setTotalRecordCount(totalCount);
+            } else {
+                throw new HibernateException("没有找到统计总数的SQL");
+            }
 //                if ((nPageNum - 1) * nPageSize >= totalCount) {
 //                    foPage.setPageNum(foPage.getPageCount());
 //                    nPageNum = foPage.getPageNum();
 //                }
-                query = session.createSQLQuery(foQuery.getSQL());
-                query.setFirstResult((nPageNum - 1) * nPageSize);
-                query.setMaxResults(nPageSize);
-                foQuery.fillEntity(query);
-                foQuery.fillQueryStmt(query, false);
-                foPage.setDataList(query.list());
-                return foPage;
-            }
+            query = session.createSQLQuery(foQuery.getSQL());
+            query.setFirstResult((nPageNum - 1) * nPageSize);
+            query.setMaxResults(nPageSize);
+            foQuery.fillEntity(query);
+            foQuery.fillQueryStmt(query, false);
+            foPage.setDataList(query.list());
+            return foPage;
         });
     }
 
@@ -175,160 +167,124 @@ public class FoHibernateDaoSupport extends HibernateDaoSupport {
     }
 
     private List execFoHQLQuery(final FoHQLQuery foQuery) {
-        return (List) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                return foQuery.fillQueryStmt(
-                        session.createQuery(foQuery.getHQL()),false).list();
-            }
-        });
+        return (List) getHibernateTemplate().execute((HibernateCallback<Object>) session -> foQuery.fillQueryStmt(
+                session.createQuery(foQuery.getHQL()),false).list());
     }
 
     private Integer execFoHQLUpdate(final FoHQLQuery foQuery) {
         return (Integer) getHibernateTemplate().execute(
-                new HibernateCallback<Object>() {
-
-                    public Object doInHibernate(Session session)
-                            throws HibernateException {
-                        return new Integer(foQuery.fillQueryStmt(
-                                session.createQuery(foQuery.getHQL()),false)
-                                .executeUpdate());
-                    }
-                });
+                (HibernateCallback<Object>) session -> new Integer(foQuery.fillQueryStmt(
+                        session.createQuery(foQuery.getHQL()),false)
+                        .executeUpdate()));
     }
 
     private List execFoSQLQuery(final FoSQLQuery foQuery) {
-        return (List) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                SQLQuery query = session.createSQLQuery(foQuery.getSQL());
-                foQuery.fillEntity(query);
-                foQuery.fillQueryStmt(query,false);
-                return query.list();
-            }
+        return (List) getHibernateTemplate().execute((HibernateCallback<Object>) session -> {
+            SQLQuery query = session.createSQLQuery(foQuery.getSQL());
+            foQuery.fillEntity(query);
+            foQuery.fillQueryStmt(query,false);
+            return query.list();
         });
     }
 
     private Integer execFoSQLUpdate(final FoSQLQuery foQuery) {
         return (Integer) getHibernateTemplate().execute(
-                new HibernateCallback<Object>() {
-
-                    public Object doInHibernate(Session session)
-                            throws HibernateException {
-                        SQLQuery query = session.createSQLQuery(foQuery
-                                .getSQL());
-                        foQuery.fillEntity(query);
-                        foQuery.fillQueryStmt(query,false);
-                        return new Integer(query.executeUpdate());
-                    }
+                (HibernateCallback<Object>) session -> {
+                    SQLQuery query = session.createSQLQuery(foQuery
+                            .getSQL());
+                    foQuery.fillEntity(query);
+                    foQuery.fillQueryStmt(query,false);
+                    return new Integer(query.executeUpdate());
                 });
     }
 
     private List execFoNamedQuery(final FoNamedQuery foQuery) {
-        return (List) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                Query query = session.getNamedQuery(foQuery.getName());
-                foQuery.fillQueryStmt(query,false);
-                return query.list();
-            }
+        return (List) getHibernateTemplate().execute((HibernateCallback<Object>) session -> {
+            Query query = session.getNamedQuery(foQuery.getName());
+            foQuery.fillQueryStmt(query,false);
+            return query.list();
         });
     }
 
     private Integer execFoNamedUpdate(final FoNamedQuery foQuery) {
         return (Integer) getHibernateTemplate().execute(
-                new HibernateCallback<Object>() {
-
-                    public Object doInHibernate(Session session)
-                            throws HibernateException {
-                        Query query = session.getNamedQuery(foQuery.getName());
-                        foQuery.fillQueryStmt(query,false);
-                        return new Integer(query.executeUpdate());
-                    }
+                (HibernateCallback<Object>) session -> {
+                    Query query = session.getNamedQuery(foQuery.getName());
+                    foQuery.fillQueryStmt(query,false);
+                    return new Integer(query.executeUpdate());
                 });
     }
 
     protected FoPage execFoPageSQLQuery2(final FoSQLQuery foQuery,
             final List retList) {
-        return (FoPage) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                FoPage foPage = new FoPage();
-                int nPageSize = foQuery.getPageSize();
-                if (nPageSize <= 0)
-                    nPageSize = 5;
-                int nPageNum = foQuery.getPageNum();
-                if (nPageNum <= 0)
-                    nPageNum = 1;
-                foPage.setPageSize(nPageSize);
-                foPage.setPageNum(nPageNum);
-                int totalCount = 0;
-                SQLQuery query;
-                if (foQuery.getCountSQL() != null) {
-                    query = session.createSQLQuery(foQuery.getCountSQL());
-                    query.addScalar("COUNT", IntegerType.INSTANCE);
-                    foQuery.fillQueryStmt(query,true);
-                    totalCount = ((Number) query.uniqueResult()).intValue();
-                    foPage.setTotalRecordCount(totalCount);
-                } else {
-                    throw new HibernateException("没有找到统计总数的SQL");
-                }
+        return (FoPage) getHibernateTemplate().execute((HibernateCallback<Object>) session -> {
+            FoPage foPage = new FoPage();
+            int nPageSize = foQuery.getPageSize();
+            if (nPageSize <= 0)
+                nPageSize = 5;
+            int nPageNum = foQuery.getPageNum();
+            if (nPageNum <= 0)
+                nPageNum = 1;
+            foPage.setPageSize(nPageSize);
+            foPage.setPageNum(nPageNum);
+            int totalCount = 0;
+            SQLQuery query;
+            if (foQuery.getCountSQL() != null) {
+                query = session.createSQLQuery(foQuery.getCountSQL());
+                query.addScalar("COUNT", IntegerType.INSTANCE);
+                foQuery.fillQueryStmt(query,true);
+                totalCount = ((Number) query.uniqueResult()).intValue();
+                foPage.setTotalRecordCount(totalCount);
+            } else {
+                throw new HibernateException("没有找到统计总数的SQL");
+            }
 //                if ((nPageNum - 1) * nPageSize >= totalCount) {
 //                    foPage.setPageNum(foPage.getPageCount());
 //                    nPageNum = foPage.getPageNum();
 //                }
-                query = session.createSQLQuery(foQuery.getSQL());
-                query.setFirstResult((nPageNum - 1) * nPageSize);
-                query.setMaxResults(nPageSize);
-                foQuery.fillEntity(query);
-                List pagelist;
-                if (nPageNum == foPage.getPageCount())
-                    pagelist = retList.subList(nPageSize * (nPageNum - 1),
-                            totalCount);
-                else
-                    pagelist = retList.subList(nPageSize * (nPageNum - 1),
-                            nPageSize * nPageNum);
-                foPage.setDataList(pagelist);
-                return foPage;
-            }
+            query = session.createSQLQuery(foQuery.getSQL());
+            query.setFirstResult((nPageNum - 1) * nPageSize);
+            query.setMaxResults(nPageSize);
+            foQuery.fillEntity(query);
+            List pagelist;
+            if (nPageNum == foPage.getPageCount())
+                pagelist = retList.subList(nPageSize * (nPageNum - 1),
+                        totalCount);
+            else
+                pagelist = retList.subList(nPageSize * (nPageNum - 1),
+                        nPageSize * nPageNum);
+            foPage.setDataList(pagelist);
+            return foPage;
         });
     }
 
     public FoPage execFoPageFileQuery(final List fileList, final int pageNum,
             final int pageSize) {
-        return (FoPage) getHibernateTemplate().execute(new HibernateCallback<Object>() {
-
-            public Object doInHibernate(Session session)
-                    throws HibernateException {
-                FoPage foPage = new FoPage();
-                int nPageSize = pageSize;
-                if (nPageSize <= 0)
-                    nPageSize = 10;
-                int nPageNum = pageNum;
-                if (nPageNum <= 0)
-                    nPageNum = 1;
-                foPage.setPageSize(nPageSize);
-                foPage.setPageNum(nPageNum);
-                int totalCount = fileList.size();
-                foPage.setTotalRecordCount(totalCount);
+        return (FoPage) getHibernateTemplate().execute((HibernateCallback<Object>) session -> {
+            FoPage foPage = new FoPage();
+            int nPageSize = pageSize;
+            if (nPageSize <= 0)
+                nPageSize = 10;
+            int nPageNum = pageNum;
+            if (nPageNum <= 0)
+                nPageNum = 1;
+            foPage.setPageSize(nPageSize);
+            foPage.setPageNum(nPageNum);
+            int totalCount = fileList.size();
+            foPage.setTotalRecordCount(totalCount);
 //                if ((nPageNum - 1) * nPageSize >= totalCount) {
 //                    foPage.setPageNum(foPage.getPageCount());
 //                    nPageNum = foPage.getPageNum();
 //                }
-                List pagelist;
-                if (nPageNum == foPage.getPageCount())
-                    pagelist = fileList.subList(nPageSize * (nPageNum - 1),
-                            totalCount);
-                else
-                    pagelist = fileList.subList(nPageSize * (nPageNum - 1),
-                            nPageSize * nPageNum);
-                foPage.setDataList(pagelist);
-                return foPage;
-            }
+            List pagelist;
+            if (nPageNum == foPage.getPageCount())
+                pagelist = fileList.subList(nPageSize * (nPageNum - 1),
+                        totalCount);
+            else
+                pagelist = fileList.subList(nPageSize * (nPageNum - 1),
+                        nPageSize * nPageNum);
+            foPage.setDataList(pagelist);
+            return foPage;
         });
     }
 
@@ -379,21 +335,17 @@ public class FoHibernateDaoSupport extends HibernateDaoSupport {
 
     public Integer execFoQuery2(final FoSQLQuery foQuery) {
         return (Integer) getHibernateTemplate().execute(
-                new HibernateCallback<Object>() {
-
-                    public Object doInHibernate(Session session)
-                            throws HibernateException {
-                        int totalCount = 0;
-                        if (foQuery.getCountSQL() != null) {
-                            SQLQuery query = session.createSQLQuery(foQuery
-                                    .getCountSQL());
-                            query.addScalar("COUNT", IntegerType.INSTANCE);
-                            foQuery.fillQueryStmt(query,false);
-                            totalCount = ((Number) query.uniqueResult())
-                                    .intValue();
-                        }
-                        return new Integer(totalCount);
+                (HibernateCallback<Object>) session -> {
+                    int totalCount = 0;
+                    if (foQuery.getCountSQL() != null) {
+                        SQLQuery query = session.createSQLQuery(foQuery
+                                .getCountSQL());
+                        query.addScalar("COUNT", IntegerType.INSTANCE);
+                        foQuery.fillQueryStmt(query,false);
+                        totalCount = ((Number) query.uniqueResult())
+                                .intValue();
                     }
+                    return new Integer(totalCount);
                 });
     }
     
