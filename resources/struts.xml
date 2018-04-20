@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+    <constant name="struts.enable.DynamicMethodInvocation" value="false" />
+    <constant name="struts.devMode" value="ture" />
+    <constant name="struts.ui.theme" value="simple" />
+    <constant name="struts.objectFactory.spring.autoWire" value="no" />
+    <constant name="struts.action.excludePattern" value="/js/.*?" />
+    <!-- /static 为存放静态资源的路径，意为不拦截对此文件夹下文件的请求 -->
+    <package name="all" extends="json-default">
+
+
+
+    <global-results>
+    	<result name="error" type="redirect">login.jsp</result>
+    </global-results>
+    </package>
+</struts>

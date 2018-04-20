@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="fuse-database3.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/fuse-database3.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:p="http://www.springframework.org/schema/p"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:task="http://www.springframework.org/schema/task"
+	   xmlns="http://www.springframework.org/schema/beans"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+	    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+		http://www.springframework.org/schema/task
+		http://www.springframework.org/schema/task/spring-task-3.0.xsd
+		http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+	<!-- 定时器开关  -->
+	<task:annotation-driven/>
+
+	<!-- 启动AspectJ支持 -->
+	<aop:aspectj-autoproxy proxy-target-class="true"/>
+
+	<!-- 导入config属性配置 -->
+	<bean id="propertyConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:config.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- Annotation IOC -->
+	<context:component-scan base-package="com" />
+
+
+	<!-- 数据源配置 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClass}"/>
+		<property name="jdbcUrl" value="${jdbc.url}"/>
+		<property name="user" value="${jdbc.username}"/>
+		<property name="password" value="${jdbc.password}"/>
+
+		<!-- c3p0连接池配置 -->
+		<!-- 获取connnection时测试是否有效  -->
+		<property name="testConnectionOnCheckin" value="false"/>
+		<!-- 自动测试的table名称 -->
+		<!--<property name="automaticTestTable" value="C3P0TestTable"/>-->
+		<!-- set to something much less than wait_timeout, prevents connections from going stale -->
+		<property name="idleConnectionTestPeriod" value="18000 "/>
+		<!-- set to something slightly less than wait_timeout, preventing 'stale' connections from being handed out -->
+		<property name="maxIdleTime" value="25000"/>
+		<!-- if you can take the performance 'hit', set to "true" -->
+		<property name="testConnectionOnCheckout" value="true"/>
+	</bean>
+
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="packagesToScan">
+			<list>
+				<value>com.business.**.po</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+				<prop key="hibernate.format_sql">false</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.query.factory_class">org.hibernate.hql.ast.ASTQueryTranslatorFactory</prop>
+				<prop key="hibernate.jdbc.batch_size">200</prop>
+				<prop key="hibernate.jdbc.fetch_size">200</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+
+	<!-- Spring 事务配置 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="SUPPORTS" isolation="READ_COMMITTED" read-only="true"/>
+			<tx:method name="query*" propagation="SUPPORTS" isolation="READ_COMMITTED" read-only="true"/>
+			<tx:method name="find*" propagation="SUPPORTS" isolation="READ_COMMITTED" read-only="true"/>
+			<tx:method name="search*" propagation="SUPPORTS" isolation="READ_COMMITTED" read-only="true"/>
+			<tx:method name="save*" propagation="REQUIRED" isolation="READ_COMMITTED"/>
+			<tx:method name="add*" propagation="REQUIRED" isolation="READ_COMMITTED"/>
+			<tx:method name="create*" propagation="REQUIRED" isolation="READ_COMMITTED"/>
+			<tx:method name="update*" propagation="REQUIRED" isolation="READ_COMMITTED"/>
+			<tx:method name="del*" propagation="REQUIRED" isolation="READ_COMMITTED"/>
+		</tx:attributes>
+	</tx:advice>
+	<!--事务配置在service层-->
+	<aop:config>
+		<aop:pointcut id="interceptorPointCuts" expression="execution(* com.business.*.service..*.*(..))"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="interceptorPointCuts"/>
+	</aop:config>
+
+
+
+</beans>
