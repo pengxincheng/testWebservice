@@ -6,7 +6,7 @@ import org.hibernate.proxy.HibernateProxy;
 /**
  * DAO抓取DTO实体对象实用类
  * 
- * @author liujiegang
+ * @author pxc
  */
 public class DTOFetchUtils {
 

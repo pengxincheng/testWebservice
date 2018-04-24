@@ -1,58 +1,113 @@
 package com.utils;
 
+import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
+
 /**
- * Created by z on 2018/3/28.
+ * webservice接口响应实体
+ * Created by pxc on 15/8/19.
  */
-public class Response<T> {
+public class Response {
 
-    private Integer code;
-    private String msg;
-    private T data;
+    private JSONObject resultJson; // 实际的响应内容
 
-    public static Response ok(){
+    /**
+     * 构造最终的响应内容
+     * @return
+     */
+    public String build() {
+        return resultJson.toString();
+    }
+
+    /**
+     * 设置接口描述信息
+     * @param message
+     * @return
+     */
+    public Response message(String message) {
+        resultJson.put("resultMessage", message);
+        return this;
+    }
+
+    /**
+     * 设置错误码
+     * @param errorCode
+     * @return
+     */
+    public Response errorCode(String errorCode) {
+        if (StringUtils.isNotBlank(errorCode)) {
+            resultJson.put("errorCode", errorCode);
+        }
+        return this;
+    }
+
+    /**
+     * 接口调用成功
+     * @return
+     */
+    public static Response ok() {
+        return ok(null);
+    }
+
+    /**
+     * 接口调用成功
+     * @param result
+     * @return
+     */
+    public static Response ok(Object result) {
+
+        JSONObject resultJson = new JSONObject();
+        resultJson.put("result", "SUCCESS");
+        resultJson.put("resultMessage", "交互成功");
+
+        if (result != null) {
+            resultJson.put("content", result);
+        }
+
         Response response = new Response();
-        response.setCode(0);
-        response.setMsg("成功");
+        response.resultJson = resultJson;
+
         return response;
     }
 
-    public static Response ok(Object data){
+    /**
+     * 接口调用失败
+     * @return
+     */
+    public static Response error() {
+        return error(ErrorStatus.ERROR);
+    }
+
+    /**
+     * 接口调用失败
+     * @param errorMsg
+     * @return
+     */
+    public static Response error(String errorMsg) {
+        return error().message(errorMsg);
+    }
+
+    /**
+     * 接口调用失败
+     * @param status
+     * @return
+     */
+    public static Response error(ErrorStatus status) {
+        JSONObject resultJson = new JSONObject();
+        resultJson.put("result", status.name());
+        resultJson.put("resultMessage", status.getDesc());
+
         Response response = new Response();
-        response.setCode(0);
-        response.setMsg("成功");
-        response.setData(data);
+        response.resultJson = resultJson;
+
         return response;
     }
 
-    public static Response error(){
-        Response response = new Response();
-        response.setCode(1);
-        response.setMsg("失败");
-        return response;
+    public JSONObject getResultJson() {
+        return resultJson;
     }
 
-    public Integer getCode() {
-        return code;
+    public void setResultJson(JSONObject resultJson) {
+        this.resultJson = resultJson;
     }
-
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public void setMsg(String msg) {
-        this.msg = msg;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
-    }
-
 }

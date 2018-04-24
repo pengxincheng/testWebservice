@@ -7,6 +7,7 @@ import com.business.student.po.StuEntity;
 import com.business.student.service.StuService;
 import com.opensymphony.xwork2.ActionSupport;
 import com.order.cc.sys.dao.FoPage;
+import com.utils.JSONUtils;
 import com.utils.Response;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.Namespace;
@@ -58,7 +59,9 @@ public class StuAntion extends ActionSupport {
             logger.info("getAllFoPage方法");
             stu = new StuEntity();//条件查询 在这里可以设置查询条件
             FoPage page = stuService.getStuPage(stu, 1, 10);
-            response = Response.ok(page);
+            response = Response.ok(JSONUtils.toJSONInclude(page, "currentPageSize", "pageCount", "totalRecordCount", "dataList", "id", "name",
+                    "age", "classesEntity","classesName"));
+            System.out.println(response);
         } catch (Exception e) {
             response = Response.error();
             logger.error(e.getMessage(), e);
@@ -88,6 +91,8 @@ public class StuAntion extends ActionSupport {
 
     private Response response;//返回json
 
+    private String result;
+
     private StuEntity stu;  //stu入参
 
     private String stuId;   //根据id查询时入参
@@ -114,5 +119,13 @@ public class StuAntion extends ActionSupport {
 
     public void setStuId(String stuId) {
         this.stuId = stuId;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public void setResult(String result) {
+        this.result = result;
     }
 }
